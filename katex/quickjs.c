@@ -2,7 +2,7 @@
 // This simplifies the build process from go.
 
 #define _GNU_SOURCE
-#define CONFIG_VERSION "qjsk"
+#define CONFIG_VERSION "2019-12-21-qjsk"
 
 #include "quickjs/quickjs-libc.c"
 #include "quickjs/quickjs.c"
