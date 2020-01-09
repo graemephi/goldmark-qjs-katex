@@ -1,4 +1,4 @@
-// Package qjskatex is an extension for goldmark (http://github.com/yuin/goldmark) to perform server-side KaTeX rendering.
+// Package qjskatex is an extension for goldmark (github.com/yuin/goldmark) to perform server-side KaTeX rendering.
 package qjskatex
 
 import (
