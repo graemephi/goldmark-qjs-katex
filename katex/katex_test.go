@@ -58,3 +58,11 @@ func TestRenderTo(t *testing.T) {
 		t.Errorf("Render and RenderTo are inconsistent:\n. %s\n. %s", a, b.Bytes())
 	}
 }
+
+func TestTooLarge(t *testing.T) {
+	dest := []byte{}
+	err := katex.Render(&dest, make([]byte, 1<<30), katex.Inline)
+	if err != katex.ErrTooLarge {
+		t.Errorf("accepted too large input")
+	}
+}
