@@ -1,10 +1,10 @@
-// package qjsKaTeX is an extension for goldmark (http://github.com/yuin/goldmark) to perform server-side KaTeX rendering.
+// Package qjskatex is an extension for goldmark (http://github.com/yuin/goldmark) to perform server-side KaTeX rendering.
 package qjskatex
 
 import (
 	"github.com/graemephi/goldmark-qjs-katex/katex"
 
-	gm "github.com/yuin/goldmark"
+	"github.com/yuin/goldmark"
 	gma "github.com/yuin/goldmark/ast"
 	gmp "github.com/yuin/goldmark/parser"
 	gmr "github.com/yuin/goldmark/renderer"
@@ -18,12 +18,12 @@ type node struct {
 	mode katex.Mode
 	pos  gmt.Segment
 
-	// Renderer Optimisation: use a single buffer to render TeX into for the
-	// entire run. But Goldmark only lets us set per-instance state, not
-	// per-run, which is problematic if multiple gorouties are rendering using
-	// the same goldmark instance. We have a parser Context, but no way to
-	// access it from the gmr. So we put a pointer to that single buffer on
-	// every node. Kinda gross, but it's up to 1.6x faster on TeX heavy pages.
+	// buf is a single buffer to render TeX into for the entire run.
+	// Goldmark only lets us set per-instance state, not per-run, which is
+	// problematic if multiple gorouties are rendering using the same goldmark
+	// instance. We have a parser Context, but no way to access it from the
+	// rendere. So we put a pointer to that single buffer on every node. Kinda
+	// gross, but it's up to 1.6x faster on TeX heavy pages.
 	// Before (initialBufSize=4096): BenchmarkSequencesAndSeries-4          20         436353295 ns/op         6995413 B/op       2169 allocs/op
 	// Before (initialBufSize=8192): BenchmarkSequencesAndSeries-4          20         356185385 ns/op         8565546 B/op       2083 allocs/op
 	// After: 						 BenchmarkSequencesAndSeries-4          20         278764605 ns/op         3978978 B/op       1532 allocs/op
@@ -86,10 +86,10 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		// $$
 		mode = katex.Display
 		start = lStart + 2
-		c_offset := 2
+		offset := 2
 
 		for end == 0 {
-			for c := c_offset; c < len(line); c++ {
+			for c := offset; c < len(line); c++ {
 				if line[c] == '$' {
 					c++
 					if c == len(line) {
@@ -120,7 +120,7 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 				lEnd = lStart + c
 				line = buf[lStart:lEnd]
 				ln++
-				c_offset = 0
+				offset = 0
 			}
 		}
 	} else if !gmu.IsSpace(line[1]) {
@@ -240,17 +240,18 @@ func (r *renderer) RegisterFuncs(reg gmr.NodeRendererFuncRegisterer) {
 	reg.Register(texNode, r.render)
 }
 
+// Extension implements goldmark.Extender, and extends Goldmark with KaTeX.
 type Extension struct {
+	// EnableWarnings allows KaTeX to print warnings to standard out. Defaults
+	// to false.
 	EnableWarnings bool
 }
 
-func (e *Extension) Extend(m gm.Markdown) {
-	warn := katex.NoWarn
-	if e.EnableWarnings {
-		warn = katex.Warn
-	}
+// Extend extends m.
+func (e *Extension) Extend(m goldmark.Markdown) {
+	warn := katex.Warnings(e.EnableWarnings)
 	var p gmp.InlineParser = &parser{}
 	var r gmr.NodeRenderer = &renderer{warn}
-	m.Parser().AddOptions(gmp.WithInlineParsers(gmu.PrioritizedValue{ Value: p, Priority: 150}))
-	m.Renderer().AddOptions(gmr.WithNodeRenderers(gmu.PrioritizedValue{ Value: r, Priority: 150}))
+	m.Parser().AddOptions(gmp.WithInlineParsers(gmu.PrioritizedValue{Value: p, Priority: 150}))
+	m.Renderer().AddOptions(gmr.WithNodeRenderers(gmu.PrioritizedValue{Value: r, Priority: 150}))
 }

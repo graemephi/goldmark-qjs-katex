@@ -2,11 +2,12 @@ package qjskatex
 
 import (
 	"bytes"
-	gm "github.com/yuin/goldmark"
-	gmhtml "github.com/yuin/goldmark/renderer/html"
 	"regexp"
 	"strings"
 	"testing"
+
+	gm "github.com/yuin/goldmark"
+	gmhtml "github.com/yuin/goldmark/renderer/html"
 )
 
 //go:generate go run gen.go $GOOS
