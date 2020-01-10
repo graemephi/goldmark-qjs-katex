@@ -348,6 +348,8 @@ $$I=4\iint_{0<\eta,\xi\leq 1}\frac{d\xi}{1+\xi^2}\frac{d\eta}{1+\eta^2} =2\int_{
 the last equality being obtained by considering the involution $(\xi,\eta) \mapsto (\xi^{-1},\eta^{-1})$ and comparing this with the last integral representation of $\pi$ above we obtain: $$I=\frac{\pi^2}{2}$$
 So, we have shown that $\frac{\pi^2}{6}$ and $\zeta(2)$ are accessible identities and equality follows.
 
+🐢
+
 I Want To Remain Anonymous
 As taken from my upcoming textbook:
 There is yet another solution to the Basel problem as proposed by Ritelli (2013). His approach is similar to the one by Apostol (1983), where he arrives at
