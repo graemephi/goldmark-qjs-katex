@@ -1,4 +1,8 @@
 // Package qjskatex is an extension for goldmark (github.com/yuin/goldmark) to perform server-side KaTeX rendering.
+//
+// 	markdown := goldmark.New(
+// 		goldmark.WithExtensions(&qjskatex.Extension{}),
+// 	)
 package qjskatex
 
 import (
@@ -18,12 +22,12 @@ type node struct {
 	mode katex.Mode
 	pos  gmt.Segment
 
-	// buf is a single buffer to render TeX into for the entire run.
-	// Goldmark only lets us set per-instance state, not per-run, which is
-	// problematic if multiple gorouties are rendering using the same goldmark
-	// instance. We have a parser Context, but no way to access it from the
-	// rendere. So we put a pointer to that single buffer on every node. Kinda
-	// gross, but it's up to 1.6x faster on TeX heavy pages.
+	// buf is a single buffer to render TeX into for the entire run. Goldmark only
+	// lets us set per-instance state, not per-run, which is problematic if multiple
+	// gorouties are rendering using the same goldmark instance. We have a parser
+	// Context, but no way to access it from the renderer. So we put a pointer to
+	// that single buffer on every node. Kinda gross, but it's up to 1.6x faster on
+	// TeX heavy pages.
 	// Before (initialBufSize=4096): BenchmarkSequencesAndSeries-4          20         436353295 ns/op         6995413 B/op       2169 allocs/op
 	// Before (initialBufSize=8192): BenchmarkSequencesAndSeries-4          20         356185385 ns/op         8565546 B/op       2083 allocs/op
 	// After: 						 BenchmarkSequencesAndSeries-4          20         278764605 ns/op         3978978 B/op       1532 allocs/op
@@ -63,9 +67,10 @@ func blank(s []byte) bool {
 }
 
 func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.Node {
-	// Pandoc only parses TeX as inline. Both $ and $$ always behave like `, and
-	// never like ```.  We give TeX the same parsing rules as `, except that inline
-	// TeX must not have leading or trailing spaces, so we do not strip them.
+	// Pandoc only parses TeX as inline; follow their example. Both $ and $$ always
+	// behave like `, and never like ```.  We give TeX the same parsing rules as `,
+	// except that inline TeX must not have leading or trailing spaces, so we do not
+	// strip them.
 
 	buf := block.Source()
 	ln, pos := block.Position()
@@ -168,21 +173,21 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		return nil
 	}
 
-	// Consider parsing `[$ab$](c.td)` (1), `[a$b](c.td/$)` (2), `[$[]$](c.td)`
-	// (3). We want to (1) to parse as as TeX-formatted link, and (2) to parse
-	// as a link, because $ are valid in URLs (this is not the case for code
-	// span backticks). But (3) can and should parse like (1). To detect and
-	// disallow (2), but allow (1) and (3), we use the following rule:
+	// Consider parsing `[$ab$](c.tld)` (1), `[a$b](c.tld/$)` (2), `[$[]$](c.tld)` (3).
+	// We want to (1) to parse as as TeX-formatted link, and (2) to parse as a link,
+	// because $ are valid in URLs (this is not the case for code span backticks).
+	// But (3) can and should parse like (1). To detect and disallow (2), but allow
+	// (1) and (3), we use the following rule:
 	//
-	// A TeX block inside a link is parsed as TeX iff a ] does not appear before
-	// the first [ inside the TeX delimiters.
+	// A TeX block inside a link is parsed as TeX iff a ] does not appear before the
+	// first [ inside the TeX delimiters.
 	//
-	// Pandoc seems to enforce balanced brackets inside of link-enclosed TeX
-	// blocks instead. This doesn't seem 'more correct' (or less) to me because
-	// ordinary TeX can clearly contain unbalanced brackets. The goal here is to
-	// prevent people from having to manually escape $ if they link something
-	// like [sub$domain](foo.bar/sub$domain), for more complicated stuff they
-	// can escape as usual.
+	// Pandoc seems to enforce balanced brackets inside of link-enclosed TeX blocks
+	// instead. This doesn't seem 'more correct' (or less) to me because ordinary
+	// TeX can clearly contain unbalanced brackets. The goal here is to prevent
+	// people from having to manually escape $ if they link something like
+	// [sub$domain](foo.bar/sub$domain), for more complicated stuff they can escape
+	// as usual.
 	if pc.IsInLinkLabel() {
 		src := buf[start:end]
 		ok := true
@@ -240,7 +245,7 @@ func (r *renderer) RegisterFuncs(reg gmr.NodeRendererFuncRegisterer) {
 	reg.Register(texNode, r.render)
 }
 
-// Extension implements goldmark.Extender, and extends Goldmark with KaTeX.
+// Extension extends Goldmark with KaTeX. It implements goldmark.Extender.
 type Extension struct {
 	// EnableWarnings allows KaTeX to print warnings to standard out. Defaults
 	// to false.

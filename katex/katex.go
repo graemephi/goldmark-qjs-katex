@@ -2,16 +2,13 @@
 //
 // Exported functions are thread-safe and can be called from any goroutine at
 // any time. Use it like this if you're doing a lot of TeX rendering:
-//    // var dest, src []byte
-//    err := katex.Render(&dest, src, katex.Inline)
+// 	// var dest, src []byte
+// 	err := katex.Render(&dest, src, katex.Inline)
 //
 // Or like this, if you aren't:
-//    // var dest io.Writer
-//    // var src []byte
-//    err := katex.RenderTo(dest, src, katex.Inline)
-//
-// On error, dest will have its length set to 0 and err will always be one of
-// the errors defined in this package.
+// 	// var dest io.Writer
+// 	// var src []byte
+//	err := katex.RenderTo(dest, src, katex.Inline)
 package katex
 
 /*
@@ -61,17 +58,11 @@ func cref(buf []byte) unsafe.Pointer {
 // Mode specifies how KaTeX is rendered with flags.
 type Mode int
 
+// Possible values of Mode.
 const (
-	// Display renders in display mode if set, inline otherwise.
-	Display Mode = 1 << iota
-
-	// Warn prints KaTeX warnings to std out if set, suppresses them otherwise.
-	Warn
-)
-
-// Named values for Mode flag combinations.
-const (
-	Inline      Mode = 0
+	Inline      Mode = 0b00
+	Display     Mode = 0b01
+	Warn        Mode = 0b10
 	InlineWarn  Mode = Inline | Warn
 	DisplayWarn Mode = Display | Warn
 )
@@ -122,6 +113,9 @@ func render(dest []byte, src []byte, m C.Mode) ([]byte, error) {
 // Render renders a TeX string to HTML with KaTeX. The intended use of this
 // function is for callers to reuse dest to minimise allocations and copying.
 // The dest slice will be reallocated to fit, if necessary.
+//
+// On error, dest will have its length set to 0 and err will always be one of
+// the errors defined in this package.
 func Render(dest *[]byte, src []byte, m Mode) error {
 	var err error
 	*dest, err = render(*dest, src, C.Mode(m))
@@ -129,6 +123,9 @@ func Render(dest *[]byte, src []byte, m Mode) error {
 }
 
 // RenderTo renders a TeX string to HTML with KaTeX.
+//
+// On error, dest will have its length set to 0 and err will always be one of
+// the errors defined in this package.
 func RenderTo(w io.Writer, src []byte, m Mode) error {
 	size := len(src) * 150
 	dest, err := render(make([]byte, size), src, C.Mode(m))
