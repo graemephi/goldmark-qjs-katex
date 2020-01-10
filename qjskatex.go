@@ -250,13 +250,14 @@ type Extension struct {
 	// EnableWarnings allows KaTeX to print warnings to standard out. Defaults
 	// to false.
 	EnableWarnings bool
+
+	p parser
+	r renderer
 }
 
 // Extend extends m.
 func (e *Extension) Extend(m goldmark.Markdown) {
-	warn := katex.Warnings(e.EnableWarnings)
-	var p gmp.InlineParser = &parser{}
-	var r gmr.NodeRenderer = &renderer{warn}
-	m.Parser().AddOptions(gmp.WithInlineParsers(gmu.PrioritizedValue{Value: p, Priority: 150}))
-	m.Renderer().AddOptions(gmr.WithNodeRenderers(gmu.PrioritizedValue{Value: r, Priority: 150}))
+	e.r.warn = katex.Warnings(e.EnableWarnings)
+	m.Parser().AddOptions(gmp.WithInlineParsers(gmu.PrioritizedValue{Value: &e.p, Priority: 150}))
+	m.Renderer().AddOptions(gmr.WithNodeRenderers(gmu.PrioritizedValue{Value: &e.r, Priority: 150}))
 }
