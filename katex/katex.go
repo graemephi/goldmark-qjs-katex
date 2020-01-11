@@ -6,9 +6,11 @@
 // 	err := katex.Render(&dest, src, katex.Inline)
 //
 // Or like this, if you aren't:
-// 	// var dest io.Writer
+// 	// var w io.Writer
 // 	// var src []byte
-//	err := katex.RenderTo(dest, src, katex.Inline)
+//	err := katex.RenderTo(w, src, katex.Inline)
+//
+// You also probably want to cache the results.
 package katex
 
 /*
@@ -124,8 +126,7 @@ func Render(dest *[]byte, src []byte, m Mode) error {
 
 // RenderTo renders a TeX string to HTML with KaTeX.
 //
-// On error, dest will have its length set to 0 and err will always be one of
-// the errors defined in this package.
+// On error, err will always be one of the errors defined in this package.
 func RenderTo(w io.Writer, src []byte, m Mode) error {
 	size := len(src) * 150
 	dest, err := render(make([]byte, size), src, C.Mode(m))

@@ -63,11 +63,26 @@ func TestUnicode(t *testing.T) {
 }
 
 func BenchmarkSequencesAndSeries(b *testing.B) {
+	in := []byte(exchange)
+
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		var buf bytes.Buffer
+
+		for pb.Next() {
+			md := gm.New(
+				gm.WithExtensions(&Extension{}),
+			)
+			if err := md.Convert(in, &buf); err != nil {
+				b.Fatalf("Failed to convert %s: %s", in, err)
+			}
+		}
+	})
+}
+
+func BenchmarkSequencesAndSeriesCached(b *testing.B) {
 	md := gm.New(
 		gm.WithExtensions(&Extension{}),
-		gm.WithRendererOptions(
-			gmhtml.WithUnsafe(),
-		),
 	)
 
 	in := []byte(exchange)

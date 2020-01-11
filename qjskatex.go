@@ -1,11 +1,16 @@
 // Package qjskatex is an extension for goldmark (github.com/yuin/goldmark) to perform server-side KaTeX rendering.
 //
+// Note: the extension holds a sync.Map to cache rendered TeX for performance; it grows without bound.
+//
 // 	markdown := goldmark.New(
 // 		goldmark.WithExtensions(&qjskatex.Extension{}),
 // 	)
 package qjskatex
 
 import (
+	"sync"
+	"unsafe"
+
 	"github.com/graemephi/goldmark-qjs-katex/katex"
 
 	"github.com/yuin/goldmark"
@@ -228,16 +233,50 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 }
 
 type renderer struct {
-	warn katex.Mode
+	warn  katex.Mode
+	cache sync.Map
+}
+
+type cacheKey struct {
+	str string
+	m   katex.Mode
+}
+
+type cacheValue struct {
+	str string
+	err error
+}
+
+func asString(buf []byte) string {
+	return *(*string)(unsafe.Pointer(&buf))
+}
+
+func (r *renderer) load(key []byte, m katex.Mode) (cv cacheValue, ok bool) {
+	ck := cacheKey{str: asString(key), m: m}
+	result, _ := r.cache.Load(ck)
+	cv, ok = result.(cacheValue)
+	return cv, ok
+}
+
+func (r *renderer) store(key []byte, m katex.Mode, value []byte, err error) {
+	r.cache.Store(
+		cacheKey{str: string(key), m: m},
+		cacheValue{str: string(value), err: err},
+	)
 }
 
 func (r *renderer) render(w gmu.BufWriter, source []byte, gmnode gma.Node, entering bool) (gma.WalkStatus, error) {
 	n := gmnode.(*node)
 	tex := source[n.pos.Start:n.pos.Stop]
-	err := katex.Render(n.buf, tex, n.mode|r.warn)
-	if err == nil {
-		w.Write(*n.buf)
+	val, ok := r.load(tex, n.mode)
+	if ok {
+		w.WriteString(val.str)
+		return gma.WalkStop, val.err
 	}
+
+	err := katex.Render(n.buf, tex, n.mode|r.warn)
+	w.Write(*n.buf)
+	r.store(tex, n.mode, *n.buf, err)
 	return gma.WalkStop, err
 }
 
