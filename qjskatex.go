@@ -290,9 +290,8 @@ func (r *renderer) RegisterFuncs(reg gmr.NodeRendererFuncRegisterer) {
 	reg.Register(texNode, r.render)
 }
 
-// Extension extends Goldmark with KaTeX. It implements goldmark.Extender.
-// Configuration is unchangable after passing the extension into goldmark.New or
-// calling Extend.
+// Extension extends Goldmark with KaTeX, implementing goldmark.Extender.
+// The configuration cannot be changed after calling Extend, i.e., after passing it into goldmark.New.
 type Extension struct {
 	// EnableWarnings allows KaTeX to print warnings to standard out.
 	EnableWarnings bool

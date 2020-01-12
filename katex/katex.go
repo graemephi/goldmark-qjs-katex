@@ -60,7 +60,7 @@ func cref(buf []byte) unsafe.Pointer {
 // Mode specifies how KaTeX is rendered with flags.
 type Mode int
 
-// Possible values of Mode.
+// Possible values of Mode:
 const (
 	Inline      Mode = 0b00
 	Display     Mode = 0b01
