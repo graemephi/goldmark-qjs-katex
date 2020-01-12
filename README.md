@@ -1,6 +1,6 @@
 # goldmark-qjs-katex
 
-This is an extension for [Goldmark](https://github.com/yuin/goldmark) that adds TeX rendering using KaTeX. It embeds QuickJS and QuickJS-compiled KaTeX bytecode.
+This is an extension for [Goldmark](https://github.com/yuin/goldmark) that adds TeX rendering using [KaTeX](https://katex.org/). It embeds [QuickJS](https://bellard.org/quickjs/) and QuickJS-compiled KaTeX bytecode.
 
 The parser follows pandoc's rules for TeX in markdown. Right now, `$` and `$$` are the only supported delimiters. Also, only KaTeX's default configuration is supported.
 
@@ -18,7 +18,11 @@ BenchmarkSequencesAndSeries/Cache-4                 5041           2329294 ns/op
 ## Usage
 
 ```
-import "github.com/graemephi/goldmark-qjs-katex"
+import (
+	"github.com/graemephi/goldmark-qjs-katex"
+	
+	"github.com/yuin/goldmark"
+)
 ```
 ```
 markdown := goldmark.New(
@@ -45,7 +49,7 @@ to do all that, or look in the Makefile to see how to do it.
 
 ## Dependencies
 
-Goldmark, KaTeX, QuickJS.
+[Goldmark](https://github.com/yuin/goldmark), [KaTeX](https://katex.org/), [QuickJS](https://bellard.org/quickjs/).
 
 ## Licenses
 
