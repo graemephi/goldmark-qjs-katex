@@ -233,8 +233,10 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 }
 
 type renderer struct {
-	warn  katex.Mode
-	cache sync.Map
+	warn katex.Mode
+
+	noCache bool
+	cache   sync.Map
 }
 
 type cacheKey struct {
@@ -252,17 +254,21 @@ func asString(buf []byte) string {
 }
 
 func (r *renderer) load(key []byte, m katex.Mode) (cv cacheValue, ok bool) {
-	ck := cacheKey{str: asString(key), m: m}
-	result, _ := r.cache.Load(ck)
-	cv, ok = result.(cacheValue)
+	if r.noCache == false {
+		ck := cacheKey{str: asString(key), m: m}
+		result, _ := r.cache.Load(ck)
+		cv, ok = result.(cacheValue)
+	}
 	return cv, ok
 }
 
 func (r *renderer) store(key []byte, m katex.Mode, value []byte, err error) {
-	r.cache.Store(
-		cacheKey{str: string(key), m: m},
-		cacheValue{str: string(value), err: err},
-	)
+	if r.noCache == false {
+		r.cache.Store(
+			cacheKey{str: string(key), m: m},
+			cacheValue{str: string(value), err: err},
+		)
+	}
 }
 
 func (r *renderer) render(w gmu.BufWriter, source []byte, gmnode gma.Node, entering bool) (gma.WalkStatus, error) {
@@ -285,10 +291,14 @@ func (r *renderer) RegisterFuncs(reg gmr.NodeRendererFuncRegisterer) {
 }
 
 // Extension extends Goldmark with KaTeX. It implements goldmark.Extender.
+// Configuration is unchangable after passing the extension into goldmark.New or
+// calling Extend.
 type Extension struct {
-	// EnableWarnings allows KaTeX to print warnings to standard out. Defaults
-	// to false.
+	// EnableWarnings allows KaTeX to print warnings to standard out.
 	EnableWarnings bool
+
+	// DisableCache disables the internal cache.
+	DisableCache bool
 
 	p parser
 	r renderer
@@ -297,6 +307,7 @@ type Extension struct {
 // Extend extends m.
 func (e *Extension) Extend(m goldmark.Markdown) {
 	e.r.warn = katex.Warnings(e.EnableWarnings)
+	e.r.noCache = e.DisableCache
 	m.Parser().AddOptions(gmp.WithInlineParsers(gmu.PrioritizedValue{Value: &e.p, Priority: 150}))
 	m.Renderer().AddOptions(gmr.WithNodeRenderers(gmu.PrioritizedValue{Value: &e.r, Priority: 150}))
 }

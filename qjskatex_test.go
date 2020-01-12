@@ -65,33 +65,40 @@ func TestUnicode(t *testing.T) {
 func BenchmarkSequencesAndSeries(b *testing.B) {
 	in := []byte(exchange)
 
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		var buf bytes.Buffer
-
-		for pb.Next() {
-			md := gm.New(
-				gm.WithExtensions(&Extension{}),
-			)
+	b.Run("NoKaTeX", func(b *testing.B) {
+		md := gm.New()
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			var buf bytes.Buffer
 			if err := md.Convert(in, &buf); err != nil {
 				b.Fatalf("Failed to convert %s: %s", in, err)
 			}
 		}
 	})
-}
 
-func BenchmarkSequencesAndSeriesCached(b *testing.B) {
-	md := gm.New(
-		gm.WithExtensions(&Extension{}),
-	)
+	b.Run("NoCache", func(b *testing.B) {
+		md := gm.New(
+			gm.WithExtensions(&Extension{DisableCache: true}),
+		)
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			var buf bytes.Buffer
+			if err := md.Convert(in, &buf); err != nil {
+				b.Fatalf("Failed to convert %s: %s", in, err)
+			}
+		}
+	})
 
-	in := []byte(exchange)
-
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		var buf bytes.Buffer
-
-		for pb.Next() {
+	b.Run("Cache", func(b *testing.B) {
+		md := gm.New(
+			gm.WithExtensions(&Extension{}),
+		)
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			var buf bytes.Buffer
 			if err := md.Convert(in, &buf); err != nil {
 				b.Fatalf("Failed to convert %s: %s", in, err)
 			}
