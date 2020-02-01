@@ -15,6 +15,7 @@ package katex
 
 /*
 #cgo linux LDFLAGS: -ldl -lm
+#cgo windows LDFLAGS: -static
 #include "katex.h"
 
 // Copied from quickjs/quickjs.c
