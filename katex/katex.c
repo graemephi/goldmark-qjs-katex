@@ -22,7 +22,8 @@ typedef struct RenderArgs {
     JSValue warnings;
 } RenderArgs;
 
-_Thread_local State *tls_state = 0;
+// cgo only uses gcc and clang, so __thread portability is not an issue.
+__thread State *tls_state = 0;
 
 static State *init_qjs()
 {
