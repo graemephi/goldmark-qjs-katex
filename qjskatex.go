@@ -272,18 +272,21 @@ func (r *renderer) store(key []byte, m katex.Mode, value []byte, err error) {
 }
 
 func (r *renderer) render(w gmu.BufWriter, source []byte, gmnode gma.Node, entering bool) (gma.WalkStatus, error) {
+	if entering {
+		return gma.WalkContinue, nil
+	}
 	n := gmnode.(*node)
 	tex := source[n.pos.Start:n.pos.Stop]
 	val, ok := r.load(tex, n.mode)
 	if ok {
 		w.WriteString(val.str)
-		return gma.WalkStop, val.err
+		return gma.WalkContinue, val.err
 	}
 
 	err := katex.Render(n.buf, tex, n.mode|r.warn)
 	w.Write(*n.buf)
 	r.store(tex, n.mode, *n.buf, err)
-	return gma.WalkStop, err
+	return gma.WalkContinue, err
 }
 
 func (r *renderer) RegisterFuncs(reg gmr.NodeRendererFuncRegisterer) {
