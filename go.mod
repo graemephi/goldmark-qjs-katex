@@ -1,4 +1,4 @@
-module github.com/graemephi/goldmark-qjs-katex
+module github.com/OhYee/goldmark-qjs-katex
 
 go 1.13
 
