@@ -117,12 +117,12 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 				break
 			}
 			if end == 0 {
-				line = buf[lEnd:]
-				c := 0
-				for c < len(line) && line[c] != '\n' {
+				rest := buf[lEnd:]
+				c := 1
+				for c < len(rest) && rest[c] != '\n' {
 					c++
 				}
-				if blank(line[:c]) {
+				if blank(rest[:c]) {
 					// End of paragraph, no closing $$
 					break
 				}
@@ -157,12 +157,12 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 				break
 			}
 			if end == 0 {
-				line = buf[lEnd:]
+				rest := buf[lEnd:]
 				c := 0
-				for c < len(line) && line[c] != '\n' {
+				for c < len(rest) && rest[c] != '\n' {
 					c++
 				}
-				if blank(line[:c]) {
+				if blank(rest[:c]) {
 					// End of paragraph, no closing $
 					break
 				}
@@ -174,7 +174,7 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		}
 	}
 
-	if end-start <= 0 {
+	if (end - start) <= 0 {
 		return nil
 	}
 
