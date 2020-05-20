@@ -12,7 +12,7 @@ import (
 
 //go:generate go run gen.go $GOOS
 
-var newlineFormatter = regexp.MustCompile(`[a-z$][ \n][a-z$]`)
+var newlineFormatter = regexp.MustCompile(`[^>]+[ \n][^<]`)
 
 func normalize(s string) string {
 	s = strings.TrimSpace(s)
@@ -31,7 +31,7 @@ func TestCases(t *testing.T) {
 
 	for _, test := range tests {
 		in := []byte(test.in)
-		want := test.out
+		want := normalize(test.out)
 		t.Run(test.in, func(t *testing.T) {
 			t.Parallel()
 			var buf bytes.Buffer
