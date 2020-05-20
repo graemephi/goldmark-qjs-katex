@@ -118,6 +118,7 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 			}
 			if end == 0 {
 				rest := buf[lEnd:]
+				// Consume at most one \n
 				c := 1
 				for c < len(rest) && rest[c] != '\n' {
 					c++
@@ -174,7 +175,7 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		}
 	}
 
-	if (end - start) <= 0 {
+	if start >= end {
 		return nil
 	}
 
@@ -214,7 +215,7 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		}
 	}
 
-	block.SetPosition(ln, gmt.NewSegment(end+advance, lEnd))
+	block.Advance(end + advance - pos.Start)
 
 	var renderBuf *[]byte
 	if v := pc.Get(ctxKey); v != nil {
