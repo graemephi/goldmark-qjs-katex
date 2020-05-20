@@ -215,7 +215,12 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		}
 	}
 
-	block.Advance(end + advance - pos.Start)
+	newPos := end + advance
+	if newPos < lEnd {
+		block.SetPosition(ln, gmt.NewSegment(newPos, lEnd))
+	} else {
+		block.Advance(end + advance - pos.Start)
+	}
 
 	var renderBuf *[]byte
 	if v := pc.Get(ctxKey); v != nil {
