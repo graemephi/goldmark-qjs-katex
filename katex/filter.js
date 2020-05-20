@@ -1,5 +1,5 @@
 #!/usr/local/bin/qjs -m
-import "./katex.js"
+import "./katex.js";
 import * as std from "std";
 
 function assert(cond) {
