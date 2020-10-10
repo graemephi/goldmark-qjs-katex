@@ -27,16 +27,7 @@ type node struct {
 	mode katex.Mode
 	pos  gmt.Segment
 
-	// buf is a single buffer to render TeX into for the entire run. Goldmark only
-	// lets us set per-instance state, not per-run, which is problematic if multiple
-	// gorouties are rendering using the same goldmark instance. We have a parser
-	// Context, but no way to access it from the renderer. So we put a pointer to
-	// that single buffer on every node. Kinda gross, but it's up to 1.6x faster on
-	// TeX heavy pages.
-	// Before (initialBufSize=4096): BenchmarkSequencesAndSeries-4          20         436353295 ns/op         6995413 B/op       2169 allocs/op
-	// Before (initialBufSize=8192): BenchmarkSequencesAndSeries-4          20         356185385 ns/op         8565546 B/op       2083 allocs/op
-	// After: 						 BenchmarkSequencesAndSeries-4          20         278764605 ns/op         3978978 B/op       1532 allocs/op
-	buf *[]byte
+	context *context
 }
 
 var texNode = gma.NewNodeKind("TeX")
@@ -53,6 +44,20 @@ func (n *node) Dump(source []byte, level int) {
 }
 
 type parser struct{}
+
+type context struct {
+	// buf is a single buffer to render TeX into for the entire run. Goldmark only
+	// lets us set per-instance state, not per-run, which is problematic if multiple
+	// gorouties are rendering using the same goldmark instance. We have a parser
+	// Context, but no way to access it from the renderer. So we put a pointer to
+	// our own context on every node. Kinda gross, but it's up to 1.6x faster on
+	// TeX heavy pages.
+	// Before (initialBufSize=4096): BenchmarkSequencesAndSeries-4          20         436353295 ns/op         6995413 B/op       2169 allocs/op
+	// Before (initialBufSize=8192): BenchmarkSequencesAndSeries-4          20         356185385 ns/op         8565546 B/op       2083 allocs/op
+	// After: 						 BenchmarkSequencesAndSeries-4          20         278764605 ns/op         3978978 B/op       1532 allocs/op
+	buf   []byte
+	count int
+}
 
 var ctxKey = gmp.NewContextKey()
 
@@ -222,19 +227,21 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 		block.Advance(end + advance - pos.Start)
 	}
 
-	var renderBuf *[]byte
+	var ctx *context
 	if v := pc.Get(ctxKey); v != nil {
-		renderBuf = (v).(*[]byte)
+		ctx = (v).(*context)
 	} else {
-		renderBuf = new([]byte)
-		*renderBuf = make([]byte, 4096)
-		pc.Set(ctxKey, renderBuf)
+		ctx = new(context)
+		ctx.buf = make([]byte, 4096)
+		pc.Set(ctxKey, ctx)
 	}
 
+	ctx.count++
+
 	return &node{
-		mode: mode,
-		pos:  gmt.NewSegment(start, end),
-		buf:  renderBuf,
+		mode:    mode,
+		pos:     gmt.NewSegment(start, end),
+		context: ctx,
 	}
 }
 
@@ -289,9 +296,9 @@ func (r *renderer) render(w gmu.BufWriter, source []byte, gmnode gma.Node, enter
 		return gma.WalkContinue, val.err
 	}
 
-	err := katex.Render(n.buf, tex, n.mode|r.warn)
-	w.Write(*n.buf)
-	r.store(tex, n.mode, *n.buf, err)
+	err := katex.Render(&n.context.buf, tex, n.mode|r.warn)
+	w.Write(n.context.buf)
+	r.store(tex, n.mode, n.context.buf, err)
 	return gma.WalkContinue, err
 }
 
@@ -318,4 +325,13 @@ func (e *Extension) Extend(m goldmark.Markdown) {
 	e.r.noCache = e.DisableCache
 	m.Parser().AddOptions(gmp.WithInlineParsers(gmu.PrioritizedValue{Value: &e.p, Priority: 150}))
 	m.Renderer().AddOptions(gmr.WithNodeRenderers(gmu.PrioritizedValue{Value: &e.r, Priority: 150}))
+}
+
+// ReportKatexNodes reports the number of KaTeX nodes seen by parsers using the Goldmark parser Context pc.
+func ReportKatexNodes(pc gmp.Context) int {
+	result := 0
+	if v := pc.Get(ctxKey); v != nil {
+		result = (v).(*context).count
+	}
+	return result
 }

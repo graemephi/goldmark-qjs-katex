@@ -7,12 +7,14 @@ import (
 	"testing"
 
 	gm "github.com/yuin/goldmark"
+	gmp "github.com/yuin/goldmark/parser"
 	gmhtml "github.com/yuin/goldmark/renderer/html"
 )
 
 //go:generate go run gen.go $GOOS
 
 var newlineFormatter = regexp.MustCompile(`(?s)>.*<`)
+var katexSpan = regexp.MustCompile(`<span class="katex(-error)?"`)
 
 func normalize(s string) string {
 	s = strings.TrimSpace(s)
@@ -35,7 +37,8 @@ func TestCases(t *testing.T) {
 		t.Run(test.in, func(t *testing.T) {
 			t.Parallel()
 			var buf bytes.Buffer
-			if err := md.Convert(in, &buf); err != nil {
+			c := gmp.NewContext()
+			if err := md.Convert(in, &buf, gmp.WithContext(c)); err != nil {
 				t.Errorf("Failed to convert %s: %s", in, err)
 				return
 			}
@@ -43,6 +46,11 @@ func TestCases(t *testing.T) {
 			got := normalize(string(buf.Bytes()))
 			if want != got {
 				t.Errorf("got, want:\n%s\n-----------------\n%s", got, want)
+			}
+
+			expectedCount := len(katexSpan.FindAllStringIndex(want, -1))
+			if ReportKatexNodes(c) != expectedCount {
+				t.Errorf("unexpected value from ReportKatexNodes()\n                 have %d\n                 want %d", ReportKatexNodes(c), expectedCount)
 			}
 		})
 	}
