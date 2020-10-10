@@ -21,7 +21,8 @@ import (
 	gmu "github.com/yuin/goldmark/util"
 )
 
-type node struct {
+// Node represents a KaTeX node in the Goldmark AST tree.
+type Node struct {
 	gma.BaseInline
 
 	mode katex.Mode
@@ -30,13 +31,16 @@ type node struct {
 	context *context
 }
 
-var texNode = gma.NewNodeKind("TeX")
+// KindTex indicates that a node is of kind qjskatex.Node.
+var KindTex = gma.NewNodeKind("TeX")
 
-func (n *node) Kind() gma.NodeKind {
-	return texNode
+// Kind returns the kind of this node.
+func (n *Node) Kind() gma.NodeKind {
+	return KindTex
 }
 
-func (n *node) Dump(source []byte, level int) {
+// Dump dumps a textual representation this node.
+func (n *Node) Dump(source []byte, level int) {
 	gma.DumpHelper(n, source, level, map[string]string{
 		"pos":  `"` + string(n.pos.Value(source)) + `"`,
 		"mode": n.mode.String(),
@@ -238,7 +242,7 @@ func (p *parser) Parse(parent gma.Node, block gmt.Reader, pc gmp.Context) gma.No
 
 	ctx.count++
 
-	return &node{
+	return &Node{
 		mode:    mode,
 		pos:     gmt.NewSegment(start, end),
 		context: ctx,
@@ -288,7 +292,7 @@ func (r *renderer) render(w gmu.BufWriter, source []byte, gmnode gma.Node, enter
 	if entering {
 		return gma.WalkContinue, nil
 	}
-	n := gmnode.(*node)
+	n := gmnode.(*Node)
 	tex := source[n.pos.Start:n.pos.Stop]
 	val, ok := r.load(tex, n.mode)
 	if ok {
@@ -303,7 +307,7 @@ func (r *renderer) render(w gmu.BufWriter, source []byte, gmnode gma.Node, enter
 }
 
 func (r *renderer) RegisterFuncs(reg gmr.NodeRendererFuncRegisterer) {
-	reg.Register(texNode, r.render)
+	reg.Register(KindTex, r.render)
 }
 
 // Extension extends Goldmark with KaTeX, implementing goldmark.Extender.
