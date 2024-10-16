@@ -32,6 +32,8 @@ markdown := goldmark.New(
 
 Also, godoc.
 
+As [explained in the KaTeX documentation](https://katex.org/docs/node#including-in-webpages), you will need to use the KaTeX stylesheet in the HTML page that is used to display the math (but not the JavaScript file). To do this, you can link to the [the minimized stylesheet hosted at jsDeliver](https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css). The KaTeX documentation provides [an example](https://katex.org/docs/browser#starter-template) (but note that you only need the stylesheet, not the script). The file `katex.min.css` is also provided in the `katex/katex` folder in this repository. The current version of `goldmark-qjs-katex` uses KaTeX version `v0.16.11`, so use this version to avoid issues (although using a version of the form `v0.16.*` should be safe as well).
+
 ## Building
 
 If you just want to build, gcc must be installed, and all you need to do is
