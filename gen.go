@@ -1,5 +1,5 @@
-// +build ignore
-// +build !windows
+//go:build ignore && !windows
+// +build ignore,!windows
 
 package main
 
@@ -78,7 +78,7 @@ var inputs = []string{
 	"$x$\n---",
 }
 
-var permutands = []string {
+var permutands = []string{
 	"$x\nx$",
 	"$x\n\n$",
 	"$\nx\n$",

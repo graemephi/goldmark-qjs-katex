@@ -70,7 +70,7 @@ func TestCases(t *testing.T) {
 				return
 			}
 
-			got := normalize(string(buf.Bytes()))
+			got := normalize(buf.String())
 			if want != got {
 				t.Errorf("got, want:\n%s\n-----------------\n%s", got, want)
 			}
