@@ -110,7 +110,7 @@ func normalize(s string) string {
 
 func pandoc(s string) string {
 	var out bytes.Buffer
-	cmd := exec.Command("pandoc", "--katex", "--filter", "./katex/filter.js")
+	cmd := exec.Command("pandoc", "--katex=katex/katex", "--filter", "./katex/filter.js")
 	cmd.Stdin = strings.NewReader(s)
 	cmd.Stdout = &out
 	err := cmd.Run()
