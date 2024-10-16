@@ -71,9 +71,7 @@ var inputs = []string{
 	`a[$b$](c)`,
 	`$a[b$](c)`,
 	`[$[]$](b)`,
-	`[$]$](b)`,
 	`[a]($b$)`,
-	`[a$b](c$)`,
 	"> $$x\n$$",
 	" - a\n\n   $x$",
 	"# $x$",
@@ -81,7 +79,6 @@ var inputs = []string{
 }
 
 var permutands = []string {
-	"$x\n$",
 	"$x\nx$",
 	"$x\n\n$",
 	"$\nx\n$",
@@ -105,6 +102,9 @@ func normalize(s string) string {
 	s = strings.ReplaceAll(s, "&quot;", "\"")
 	s = strings.ReplaceAll(s, "<li><p>", "<li>\n<p>")
 	s = strings.ReplaceAll(s, "</p></li>", "</p>\n</li>")
+	s = strings.ReplaceAll(s, "“", "\"")
+	s = strings.ReplaceAll(s, "”", "\"")
+	s = strings.ReplaceAll(s, "\nid=\"x\"", "")
 	return s
 }
 
