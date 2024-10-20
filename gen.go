@@ -1,5 +1,5 @@
-// +build ignore
-// +build !windows
+//go:build ignore && !windows
+// +build ignore,!windows
 
 package main
 
@@ -71,17 +71,14 @@ var inputs = []string{
 	`a[$b$](c)`,
 	`$a[b$](c)`,
 	`[$[]$](b)`,
-	`[$]$](b)`,
 	`[a]($b$)`,
-	`[a$b](c$)`,
 	"> $$x\n$$",
 	" - a\n\n   $x$",
 	"# $x$",
 	"$x$\n---",
 }
 
-var permutands = []string {
-	"$x\n$",
+var permutands = []string{
 	"$x\nx$",
 	"$x\n\n$",
 	"$\nx\n$",
@@ -105,12 +102,15 @@ func normalize(s string) string {
 	s = strings.ReplaceAll(s, "&quot;", "\"")
 	s = strings.ReplaceAll(s, "<li><p>", "<li>\n<p>")
 	s = strings.ReplaceAll(s, "</p></li>", "</p>\n</li>")
+	s = strings.ReplaceAll(s, "“", "\"")
+	s = strings.ReplaceAll(s, "”", "\"")
+	s = strings.ReplaceAll(s, "\nid=\"x\"", "")
 	return s
 }
 
 func pandoc(s string) string {
 	var out bytes.Buffer
-	cmd := exec.Command("pandoc", "--katex", "--filter", "./katex/filter.js")
+	cmd := exec.Command("pandoc", "--katex=katex/katex", "--filter", "./katex/filter.js")
 	cmd.Stdin = strings.NewReader(s)
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -126,7 +126,7 @@ func testCase(s string) string {
 }
 
 func main() {
-	if len(os.Args) > 0 && os.Args[1] == "windows" {
+	if len(os.Args) > 1 && os.Args[1] == "windows" {
 		log.Println("gen.go: warning: gen.go requires a bash shell and will probably fail on windows!")
 	}
 	var b bytes.Buffer

@@ -9,7 +9,7 @@ import (
 
 func TestUnicode(t *testing.T) {
 	in := []byte("🐢")
-	want := []byte("<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mtext>🐢</mtext></mrow><annotation encoding=\"application/x-tex\">🐢</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"base\"><span class=\"strut\" style=\"height:0em;vertical-align:0em;\"></span><span class=\"mord\">🐢</span></span></span></span></span>")
+	want := []byte("<span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><mtext>🐢</mtext></mrow><annotation encoding=\"application/x-tex\">🐢</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"base\"><span class=\"strut\" style=\"height:0em;\"></span><span class=\"mord\">🐢</span></span></span></span></span>")
 	got := make([]byte, len(want))
 	err := katex.Render(&got, in, katex.Display)
 	if err != nil {
